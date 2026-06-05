@@ -4,6 +4,11 @@ import random
 import sys
 from pathlib import Path
 
+try:
+    from pypdf import PdfReader
+except ImportError:
+    PdfReader = None
+
 
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size=12, learning_rate=0.08, seed=7):
@@ -152,10 +157,26 @@ def read_resume_from_file(path):
     if not file_path.exists():
         print("File not found.")
         return ""
-    if file_path.suffix.lower() != ".txt":
-        print("Only .txt files are supported.")
+    suffix = file_path.suffix.lower()
+    if suffix == ".txt":
+        return file_path.read_text(encoding="utf-8", errors="ignore")
+    if suffix == ".pdf":
+        return extract_text_from_pdf(file_path)
+    print("Only .txt and .pdf files are supported.")
+    return ""
+
+
+def extract_text_from_pdf(file_path):
+    if PdfReader is None:
+        print("PDF support requires pypdf. Install it with: pip install pypdf")
         return ""
-    return file_path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        reader = PdfReader(file_path)
+        pages = [page.extract_text() or "" for page in reader.pages]
+    except Exception as error:
+        print(f"Could not read PDF: {error}")
+        return ""
+    return "\n".join(pages)
 
 
 def read_resume_from_paste():
@@ -172,7 +193,7 @@ def read_resume_from_paste():
 def read_resume():
     if len(sys.argv) > 1:
         return read_resume_from_file(sys.argv[1])
-    source = input("Enter txt file path or press Enter to paste resume: ").strip().strip('"')
+    source = input("Enter txt/pdf file path or press Enter to paste resume: ").strip().strip('"')
     if source:
         return read_resume_from_file(source)
     return read_resume_from_paste()
