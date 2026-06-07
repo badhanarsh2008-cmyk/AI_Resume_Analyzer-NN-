@@ -22,15 +22,34 @@ except ImportError:
 
 FEATURE_LABELS = [
     "Resume length",
-    "Technical skills",
+    "Role-relevant skills",
     "Action verbs",
-    "Education",
+    "Education / training",
     "Important sections",
     "Contact details",
     "Measurable results",
     "Bullet structure",
     "Readable lines",
     "Vocabulary range"
+]
+
+ROLE_SKILL_KEYWORDS = [
+    "accounting", "administration", "admissions", "air conditioning", "analytics", "assembly",
+    "assessment", "audit", "auto repair", "automotive", "aws", "azure", "billing", "bookkeeping",
+    "budgeting", "carpentry", "cash handling", "classroom", "client service", "coaching",
+    "communication", "compliance", "computer", "construction", "content", "cooking",
+    "counseling", "crm", "css", "curriculum", "customer service", "data entry", "database",
+    "diagnostics", "django", "docker", "documentation", "electrical", "equipment",
+    "excel", "fabrication", "first aid", "flask", "food safety", "forklift", "git",
+    "grading", "guest service", "html", "hvac", "inventory", "java", "javascript",
+    "kubernetes", "lesson planning", "linux", "logistics", "machine learning", "maintenance",
+    "marketing", "mathematics", "mechanical", "merchandising", "microsoft office", "node",
+    "nursing", "operations", "pandas", "patient care", "payroll", "plumbing", "pos",
+    "preventive maintenance", "project management", "pytorch", "python", "quality control",
+    "react", "records management", "recruiting", "repairs", "reporting", "research",
+    "safety", "sales", "scheduling", "scikit", "sql", "stocking", "supervision",
+    "teaching", "team leadership", "tensorflow", "training", "troubleshooting",
+    "typescript", "welding", "writing"
 ]
 
 
@@ -80,7 +99,11 @@ class NeuralNetwork:
 
 
 def count_keywords(text, keywords):
-    return sum(1 for keyword in keywords if re.search(r"\b" + re.escape(keyword) + r"\b", text))
+    return sum(
+        1
+        for keyword in keywords
+        if re.search(r"(?<![a-z0-9+#.])" + re.escape(keyword) + r"(?![a-z0-9+#.])", text)
+    )
 
 
 def normalized(value, limit):
@@ -90,22 +113,22 @@ def normalized(value, limit):
 def extract_features(resume):
     text = resume.lower()
     words = re.findall(r"[a-zA-Z0-9+#.]+", text)
-    technical_keywords = [
-        "python", "java", "javascript", "typescript", "c++", "sql", "react", "node", "django",
-        "flask", "tensorflow", "pytorch", "scikit", "pandas", "numpy", "aws", "azure", "docker",
-        "kubernetes", "git", "linux", "html", "css", "machine", "learning", "api", "excel"
-    ]
     action_keywords = [
         "built", "created", "developed", "designed", "implemented", "improved", "optimized",
-        "automated", "managed", "led", "launched", "deployed", "analyzed", "trained", "reduced"
+        "automated", "managed", "led", "launched", "deployed", "analyzed", "trained", "reduced",
+        "taught", "mentored", "supervised", "coordinated", "maintained", "repaired", "installed",
+        "diagnosed", "served", "supported", "organized", "prepared", "planned", "resolved",
+        "delivered", "processed", "inspected", "operated", "assisted", "increased"
     ]
     education_keywords = [
         "bachelor", "master", "phd", "degree", "university", "college", "certification",
-        "certified", "course", "diploma"
+        "certified", "course", "diploma", "license", "licensed", "apprenticeship", "training",
+        "workshop", "school", "board", "iti"
     ]
     section_keywords = [
         "experience", "projects", "skills", "education", "summary", "objective", "certifications",
-        "achievements"
+        "achievements", "profile", "work history", "employment", "licenses", "training",
+        "awards", "volunteer", "references"
     ]
     contact_score = int(bool(re.search(r"[\w.+-]+@[\w-]+\.[\w.-]+", text))) + int(bool(re.search(r"\b\d{10}\b|\(\d{3}\)\s*\d{3}[- ]?\d{4}", text))) + int("linkedin" in text or "github" in text)
     number_score = len(re.findall(r"\b\d+%?\b", text))
@@ -113,7 +136,7 @@ def extract_features(resume):
     long_line_penalty = sum(1 for line in resume.splitlines() if len(line) > 140)
     features = [
         normalized(len(words), 650),
-        normalized(count_keywords(text, technical_keywords), 16),
+        normalized(count_keywords(text, ROLE_SKILL_KEYWORDS), 12),
         normalized(count_keywords(text, action_keywords), 10),
         normalized(count_keywords(text, education_keywords), 5),
         normalized(count_keywords(text, section_keywords), 7),
@@ -235,7 +258,7 @@ def read_resume_from_paste():
 def read_resume():
     if len(sys.argv) > 1:
         return read_resume_from_file(sys.argv[1])
-    source = input("Enter txt/pdf file path or press Enter to paste resume: ").strip().strip('"')
+    source = input("Enter txt/pdf/image file path or press Enter to paste resume: ").strip().strip('"')
     if source:
         return read_resume_from_file(source)
     return read_resume_from_paste()
