@@ -9,6 +9,30 @@ try:
 except ImportError:
     PdfReader = None
 
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
+try:
+    import pytesseract
+except ImportError:
+    pytesseract = None
+
+
+FEATURE_LABELS = [
+    "Resume length",
+    "Technical skills",
+    "Action verbs",
+    "Education",
+    "Important sections",
+    "Contact details",
+    "Measurable results",
+    "Bullet structure",
+    "Readable lines",
+    "Vocabulary range"
+]
+
 
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size=12, learning_rate=0.08, seed=7):
@@ -135,21 +159,25 @@ def score_resume(resume):
 
 
 def feedback(features):
-    labels = [
-        "Resume length",
-        "Technical skills",
-        "Action verbs",
-        "Education",
-        "Important sections",
-        "Contact details",
-        "Measurable results",
-        "Bullet structure",
-        "Readable lines",
-        "Vocabulary range"
-    ]
-    strengths = [label for label, value in zip(labels, features) if value >= 0.65]
-    improvements = [label for label, value in zip(labels, features) if value < 0.45]
+    strengths = [label for label, value in zip(FEATURE_LABELS, features) if value >= 0.65]
+    improvements = [label for label, value in zip(FEATURE_LABELS, features) if value < 0.45]
     return strengths[:4], improvements[:4]
+
+
+def analyze_resume(resume):
+    score, features = score_resume(resume)
+    strengths, improvements = feedback(features)
+    feature_scores = [
+        {"label": label, "value": round(value * 100)}
+        for label, value in zip(FEATURE_LABELS, features)
+    ]
+    return {
+        "score": score,
+        "strengths": strengths,
+        "improvements": improvements,
+        "features": feature_scores,
+        "word_count": len(re.findall(r"[a-zA-Z0-9+#.]+", resume))
+    }
 
 
 def read_resume_from_file(path):
@@ -162,7 +190,9 @@ def read_resume_from_file(path):
         return file_path.read_text(encoding="utf-8", errors="ignore")
     if suffix == ".pdf":
         return extract_text_from_pdf(file_path)
-    print("Only .txt and .pdf files are supported.")
+    if suffix in {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff"}:
+        return extract_text_from_image(file_path)
+    print("Only .txt, .pdf, and image files are supported.")
     return ""
 
 
@@ -177,6 +207,18 @@ def extract_text_from_pdf(file_path):
         print(f"Could not read PDF: {error}")
         return ""
     return "\n".join(pages)
+
+
+def extract_text_from_image(file_path):
+    if Image is None or pytesseract is None:
+        print("Image support requires Pillow and pytesseract. Install them with: pip install pillow pytesseract")
+        return ""
+    try:
+        image = Image.open(file_path)
+        return pytesseract.image_to_string(image)
+    except Exception as error:
+        print(f"Could not read image: {error}")
+        return ""
 
 
 def read_resume_from_paste():

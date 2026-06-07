@@ -1,0 +1,106 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1273 >>
+stream
+BT
+/F1 11 Tf
+50 780 Td
+14 TL
+(Rahul Sharma) Tj
+T*
+(rahul.sharma@email.com) Tj
+T*
+(9876543210) Tj
+T*
+(linkedin.com/in/rahulsharma) Tj
+T*
+(github.com/rahulsharma) Tj
+T*
+() Tj
+T*
+(Summary) Tj
+T*
+(Computer Science student skilled in Python, SQL, machine learning, and web development.) Tj
+T*
+() Tj
+T*
+(Skills) Tj
+T*
+(Python, JavaScript, SQL, React, Node.js, Flask, Pandas, NumPy, Scikit-learn, Git, Linux,) Tj
+T*
+(Docker, HTML, CSS) Tj
+T*
+() Tj
+T*
+(Experience) Tj
+T*
+(Software Developer Intern) Tj
+T*
+(ABC Tech Solutions) Tj
+T*
+() Tj
+T*
+(- Built a Flask API to process user data and return analytics reports) Tj
+T*
+(- Improved dashboard loading speed by 35% using optimized SQL queries) Tj
+T*
+(- Automated weekly Excel reports using Python and Pandas) Tj
+T*
+(- Worked with Git, Linux, and Docker for development and deployment) Tj
+T*
+() Tj
+T*
+(Projects) Tj
+T*
+(Resume Analyzer) Tj
+T*
+(- Created a machine learning project that scores resumes using Python) Tj
+T*
+(- Extracted keywords, sections, contact details, and measurable results) Tj
+T*
+() Tj
+T*
+(Education) Tj
+T*
+(Bachelor of Technology in Computer Science) Tj
+T*
+(XYZ University) Tj
+T*
+(2022 - 2026) Tj
+T*
+() Tj
+T*
+(Certifications) Tj
+T*
+(Python Programming Certification) Tj
+T*
+(Machine Learning Basics Course) Tj
+T*
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1636
+%%EOF
