@@ -83,6 +83,7 @@
                         </div>
 
                         <div class="chart">
+<<<<<<< HEAD
                             <h3>20-Point Feature Graph</h3>
                             {% for feature in result.features %}
                                 <div class="bar-row">
@@ -90,6 +91,12 @@
                                         {{ feature.label }}
                                         <span class="feature-tooltip">{{ feature.description }}</span>
                                     </span>
+=======
+                            <h3>Feature Graph</h3>
+                            {% for feature in result.features %}
+                                <div class="bar-row">
+                                    <span>{{ feature.label }}</span>
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
                                     <div class="bar-track"><div class="bar-fill" style="width: {{ feature.value }}%"></div></div>
                                     <strong>{{ feature.value }}%</strong>
                                 </div>

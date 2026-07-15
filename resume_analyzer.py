@@ -21,6 +21,7 @@ except ImportError:
     pytesseract = None
 
 
+<<<<<<< HEAD
 FEATURE_DETAILS = [
     ("Resume length", "Checks whether the resume has enough useful text without being excessively short."),
     ("Role-relevant skills", "Looks for technical and professional skills used across common roles."),
@@ -44,6 +45,20 @@ FEATURE_DETAILS = [
     ("Completion check", "Rewards resumes without visible placeholders such as [Add your email] or TODO."),
 ]
 FEATURE_LABELS = [label for label, _ in FEATURE_DETAILS]
+=======
+FEATURE_LABELS = [
+    "Resume length",
+    "Role-relevant skills",
+    "Action verbs",
+    "Education / training",
+    "Important sections",
+    "Contact details",
+    "Measurable results",
+    "Bullet structure",
+    "Readable lines",
+    "Vocabulary range"
+]
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 
 ROLE_SKILL_KEYWORDS = [
     "accounting", "administration", "admissions", "air conditioning", "analytics", "assembly",
@@ -65,7 +80,11 @@ ROLE_SKILL_KEYWORDS = [
 ]
 
 MODEL_PATH = Path(__file__).with_name("resume_model.json")
+<<<<<<< HEAD
 MODEL_FORMAT_VERSION = 2
+=======
+MODEL_FORMAT_VERSION = 1
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 _trained_model = None
 
 
@@ -172,7 +191,10 @@ def normalized(value, limit):
 def extract_features(resume):
     text = resume.lower()
     words = re.findall(r"[a-zA-Z0-9+#.]+", text)
+<<<<<<< HEAD
     lines = [line.strip() for line in resume.splitlines() if line.strip()]
+=======
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
     action_keywords = [
         "built", "created", "developed", "designed", "implemented", "improved", "optimized",
         "automated", "managed", "led", "launched", "deployed", "analyzed", "trained", "reduced",
@@ -193,6 +215,7 @@ def extract_features(resume):
     contact_score = int(bool(re.search(r"[\w.+-]+@[\w-]+\.[\w.-]+", text))) + int(bool(re.search(r"\b\d{10}\b|\(\d{3}\)\s*\d{3}[- ]?\d{4}", text))) + int("linkedin" in text or "github" in text)
     number_score = len(re.findall(r"\b\d+%?\b", text))
     bullet_score = resume.count("\n-") + resume.count("\n*") + resume.count(chr(8226))
+<<<<<<< HEAD
     long_line_penalty = sum(1 for line in lines if len(line) > 140)
     target_role_keywords = [
         "engineer", "developer", "analyst", "designer", "manager", "specialist", "consultant",
@@ -215,6 +238,9 @@ def extract_features(resume):
         and re.search(r"\b\d+%?\b|(?:increased|reduced|improved|saved|grew)", line.lower())
     )
     placeholder_count = len(re.findall(r"\[[^\]]*(?:add|insert|your)[^\]]*\]|\b(?:todo|tbd)\b", text))
+=======
+    long_line_penalty = sum(1 for line in resume.splitlines() if len(line) > 140)
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
     features = [
         normalized(len(words), 650),
         normalized(count_keywords(text, ROLE_SKILL_KEYWORDS), 12),
@@ -225,6 +251,7 @@ def extract_features(resume):
         normalized(number_score, 8),
         normalized(bullet_score, 12),
         1 - normalized(long_line_penalty, 6),
+<<<<<<< HEAD
         normalized(len(set(words)), 350),
         normalized(count_keywords(text, target_role_keywords), 2),
         float(bool(re.search(r"\b(?:summary|profile|objective)\b", text))),
@@ -236,15 +263,22 @@ def extract_features(resume):
         normalized(skills_organization, 3),
         normalized(achievement_bullets, 3),
         1 - normalized(placeholder_count, 1),
+=======
+        normalized(len(set(words)), 350)
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
     ]
     return features
 
 
 def rule_score(features):
+<<<<<<< HEAD
     weights = [
         1.0, 1.7, 1.3, 0.8, 1.2, 1.0, 1.1, 0.8, 0.6, 0.7,
         0.9, 1.1, 1.0, 1.2, 0.7, 0.6, 0.7, 0.8, 1.2, 0.8,
     ]
+=======
+    weights = [1.0, 1.7, 1.3, 0.8, 1.2, 1.0, 1.1, 0.8, 0.6, 0.7]
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
     value = sum(feature * weight for feature, weight in zip(features, weights)) / sum(weights)
     return max(0.0, min(1.0, value))
 
@@ -253,6 +287,7 @@ def make_training_data():
     data = []
     random.seed(21)
     for _ in range(90):
+<<<<<<< HEAD
         features = [random.random() for _ in FEATURE_LABELS]
         target = rule_score(features)
         data.append((features, target))
@@ -261,6 +296,16 @@ def make_training_data():
         ([0.25, 0.2, 0.15, 0.2, 0.3, 0.4, 0.1, 0.2, 0.8, 0.25] + [0.2] * 9 + [0.7], 0.32),
         ([0.55, 0.55, 0.5, 0.45, 0.65, 0.7, 0.45, 0.5, 0.9, 0.55] + [0.55] * 9 + [1.0], 0.62),
         ([0.85, 0.9, 0.85, 0.7, 0.85, 1.0, 0.9, 0.8, 0.95, 0.85] + [0.85] * 9 + [1.0], 0.92)
+=======
+        features = [random.random() for _ in range(10)]
+        target = rule_score(features)
+        data.append((features, target))
+    examples = [
+        ([0.05, 0.02, 0.01, 0.0, 0.05, 0.0, 0.0, 0.0, 0.7, 0.05], 0.05),
+        ([0.25, 0.2, 0.15, 0.2, 0.3, 0.4, 0.1, 0.2, 0.8, 0.25], 0.32),
+        ([0.55, 0.55, 0.5, 0.45, 0.65, 0.7, 0.45, 0.5, 0.9, 0.55], 0.62),
+        ([0.85, 0.9, 0.85, 0.7, 0.85, 1.0, 0.9, 0.8, 0.95, 0.85], 0.92)
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
     ]
     data.extend(examples)
     return data
@@ -303,8 +348,13 @@ def analyze_resume(resume):
     score, features = score_resume(resume)
     strengths, improvements = feedback(features)
     feature_scores = [
+<<<<<<< HEAD
         {"label": label, "description": description, "value": round(value * 100)}
         for (label, description), value in zip(FEATURE_DETAILS, features)
+=======
+        {"label": label, "value": round(value * 100)}
+        for label, value in zip(FEATURE_LABELS, features)
+>>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
     ]
     return {
         "score": score,
