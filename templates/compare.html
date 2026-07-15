@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Compare Resumes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="compare-shell">
+        <a class="back-link" href="{{ url_for('index') }}">← Back to analyzer</a>
+        <header class="compare-header">
+            <p class="eyebrow">Side-by-side review</p>
+            <h1>Compare two resumes.</h1>
+            <p class="lede">Upload two resumes to compare their scores and checked areas at the same time.</p>
+        </header>
+
+        <form method="post" enctype="multipart/form-data" class="compare-form">
+            <label class="file-picker">
+                <span>First resume</span>
+                <input type="file" name="resume_one" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tiff" required>
+            </label>
+            <label class="file-picker">
+                <span>Second resume</span>
+                <input type="file" name="resume_two" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tiff" required>
+            </label>
+            <button type="submit">Compare resumes</button>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if results %}
+            <section class="comparison-grid">
+                {% for result in results %}
+                    <article class="comparison-card">
+                        <div class="comparison-score">
+                            <div class="score-ring score-ring--small" style="--score: {{ result.score * 10 }}%">
+                                <span>{{ result.score }}</span>
+                                <small>/10</small>
+                            </div>
+                            <div>
+                                <p class="eyebrow">Resume {{ loop.index }}</p>
+                                <h2>{{ result.filename }}</h2>
+                                <p>{{ result.word_count }} words analyzed</p>
+                            </div>
+                        </div>
+
+                        <div class="score-badge score-badge--{{ result.badge.tone }}" role="status">
+                            <span class="badge-icon" aria-hidden="true">{{ result.badge.icon }}</span>
+                            <span>
+                                <strong>{{ result.badge.label }}</strong>
+                                <small>{{ result.badge.message }}</small>
+                            </span>
+                        </div>
+
+                        {% if result.score < 6 %}
+                            <p class="draft-notice">Want a clearer draft? Upload this resume in the <a href="{{ url_for('index') }}">normal analyzer</a> to get its improved resume version.</p>
+                        {% endif %}
+
+                        <div class="comparison-insights">
+                            <section>
+                                <h3>Strong Areas</h3>
+                                <ul>
+                                    {% for item in result.strengths %}
+                                        <li>{{ item }}</li>
+                                    {% else %}
+                                        <li>No strong areas detected yet.</li>
+                                    {% endfor %}
+                                </ul>
+                            </section>
+                            <section>
+                                <h3>Missing / Improve</h3>
+                                <ul>
+                                    {% for item in result.improvements %}
+                                        <li>{{ item }}</li>
+                                    {% else %}
+                                        <li>Looks balanced across the checked areas.</li>
+                                    {% endfor %}
+                                </ul>
+                            </section>
+                        </div>
+
+                        <div class="chart">
+                            <h3>Feature Graph</h3>
+                            {% for feature in result.features %}
+                                <div class="bar-row">
+                                    <span>{{ feature.label }}</span>
+                                    <div class="bar-track"><div class="bar-fill" style="width: {{ feature.value }}%"></div></div>
+                                    <strong>{{ feature.value }}%</strong>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

@@ -2,6 +2,7 @@ import math
 import re
 import random
 import sys
+import json
 from pathlib import Path
 
 try:
@@ -52,6 +53,10 @@ ROLE_SKILL_KEYWORDS = [
     "typescript", "welding", "writing"
 ]
 
+MODEL_PATH = Path(__file__).with_name("resume_model.json")
+MODEL_FORMAT_VERSION = 1
+_trained_model = None
+
 
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size=12, learning_rate=0.08, seed=7):
@@ -96,6 +101,49 @@ class NeuralNetwork:
 
     def predict(self, features):
         return self.forward(features)[1]
+
+    def to_dict(self):
+        """Return the trained parameters in a JSON-safe format."""
+        return {
+            "format_version": MODEL_FORMAT_VERSION,
+            "input_size": len(self.w1[0]),
+            "hidden_size": len(self.w1),
+            "learning_rate": self.learning_rate,
+            "w1": self.w1,
+            "b1": self.b1,
+            "w2": self.w2,
+            "b2": self.b2,
+        }
+
+    @classmethod
+    def from_dict(cls, data, expected_input_size):
+        """Create a network from saved parameters after basic validation."""
+        if data.get("format_version") != MODEL_FORMAT_VERSION:
+            raise ValueError("Unsupported model format")
+        if data.get("input_size") != expected_input_size:
+            raise ValueError("Saved model has a different input size")
+
+        hidden_size = data.get("hidden_size")
+        w1, b1, w2 = data.get("w1"), data.get("b1"), data.get("w2")
+        if (
+            not isinstance(hidden_size, int)
+            or hidden_size < 1
+            or not isinstance(w1, list)
+            or len(w1) != hidden_size
+            or any(not isinstance(row, list) or len(row) != expected_input_size for row in w1)
+            or not isinstance(b1, list)
+            or len(b1) != hidden_size
+            or not isinstance(w2, list)
+            or len(w2) != hidden_size
+        ):
+            raise ValueError("Saved model parameters are invalid")
+
+        model = cls(expected_input_size, hidden_size, data.get("learning_rate", 0.08))
+        model.w1 = w1
+        model.b1 = b1
+        model.w2 = w2
+        model.b2 = data.get("b2", 0.0)
+        return model
 
 
 def count_keywords(text, keywords):
@@ -172,10 +220,28 @@ def make_training_data():
     return data
 
 
+def load_or_train_model(input_size):
+    """Load the cached model, or train and save it if it does not exist yet."""
+    global _trained_model
+    if _trained_model is not None:
+        return _trained_model
+
+    try:
+        saved_model = json.loads(MODEL_PATH.read_text(encoding="utf-8"))
+        _trained_model = NeuralNetwork.from_dict(saved_model, input_size)
+        return _trained_model
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        # A missing, invalid, or older model is safely replaced by a new one.
+        model = NeuralNetwork(input_size)
+        model.train(make_training_data())
+        MODEL_PATH.write_text(json.dumps(model.to_dict(), indent=2), encoding="utf-8")
+        _trained_model = model
+        return _trained_model
+
+
 def score_resume(resume):
     features = extract_features(resume)
-    network = NeuralNetwork(len(features))
-    network.train(make_training_data())
+    network = load_or_train_model(len(features))
     raw_score = network.predict(features)
     score = max(1, min(10, round(raw_score * 9 + 1)))
     return score, features

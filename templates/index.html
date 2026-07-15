@@ -22,6 +22,7 @@
                 </label>
                 <button type="submit">Analyze</button>
             </form>
+            <a class="secondary-link" href="{{ url_for('compare') }}">Compare two resumes</a>
 
             {% if error %}
                 <p class="error">{{ error }}</p>
@@ -39,6 +40,13 @@
                         <p class="eyebrow">{{ result.filename }}</p>
                         <h2>Resume score</h2>
                         <p>{{ result.word_count }} words analyzed</p>
+                        <div class="score-badge score-badge--{{ result.badge.tone }}" role="status">
+                            <span class="badge-icon" aria-hidden="true">{{ result.badge.icon }}</span>
+                            <span>
+                                <strong>{{ result.badge.label }}</strong>
+                                <small>{{ result.badge.message }}</small>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -77,6 +85,14 @@
                         </div>
                     {% endfor %}
                 </div>
+
+                {% if result.improved_resume %}
+                    <section class="improved-resume">
+                        <h3>Improved Resume Draft</h3>
+                        <p>Your score is below 6, so here is a clearer, ATS-friendly draft based only on the text you uploaded. Complete the bracketed prompts and verify every claim before using it.</p>
+                        <pre>{{ result.improved_resume }}</pre>
+                    </section>
+                {% endif %}
             {% else %}
                 <div class="empty-state">
                     <h2>Your analysis will appear here.</h2>

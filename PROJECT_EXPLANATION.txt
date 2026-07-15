@@ -1,0 +1,227 @@
+AI RESUME ANALYZER - PROJECT EXPLANATION
+========================================
+
+1. PROJECT PURPOSE
+------------------
+This website accepts a resume and gives a score from 1 to 10. It identifies
+strong areas, missing areas, and shows a feature graph. If the score is below
+6, it also displays a clearer resume draft based on the uploaded text.
+
+The program supports TXT, PDF, and image resumes. Image reading needs OCR.
+
+
+2. HOW IT WORKS
+---------------
+1. The user uploads a resume in the browser.
+2. app.py checks the file type and saves it temporarily.
+3. resume_analyzer.py extracts the text from the file.
+4. The analyzer turns the text into 10 numeric features.
+5. A small neural network combines the feature values and returns a score.
+6. The web page displays the score, feedback, and graph.
+7. When the score is lower than 6, resume_improver.py creates a safe,
+   reorganized draft from the supplied content.
+
+
+3. FILES AND THEIR RESPONSIBILITIES
+-----------------------------------
+app.py
+  The Flask web application. It receives uploads, calls the analyzer, and
+  displays the result. It calls the improver only for scores below 6.
+
+resume_analyzer.py
+  The scoring module. It reads files, extracts features, contains and trains
+  the neural network, and returns scores and feedback.
+
+resume_improver.py
+  The separate low-score improvement module. It cleans supplied text, detects
+  headings such as Skills, Experience, and Education, and organizes it into a
+  draft. It never creates fake jobs, dates, skills, or achievements.
+
+templates/index.html
+  The structure of the browser page: upload form, score, feedback, graph, and
+  improved-resume draft.
+
+static/styles.css
+  The visual design, including layout, score ring, graph bars, and the draft.
+
+requirements.txt
+  The Python packages needed to run the project.
+
+
+4. LIBRARIES USED
+-----------------
+Flask: creates the website and handles requests.
+Werkzeug: safely handles upload filenames through secure_filename.
+pypdf: extracts text from PDF files.
+Pillow (PIL): opens image files for OCR.
+pytesseract: connects Python to Tesseract OCR for image text extraction.
+re: Python regular expressions; finds keywords, emails, numbers, and headings.
+math: provides the exponential calculation needed by sigmoid.
+random: initializes model weights and creates sample training data.
+pathlib and tempfile: safely work with temporary files and paths.
+
+For image OCR, the Tesseract application must also be installed on the system.
+
+
+5. THE 10 CHECKED RESUME FEATURES
+----------------------------------
+Each check becomes a number between 0 and 1. Higher is better.
+
+1. Resume length: enough words and useful content.
+2. Role-relevant skills: terms such as Python, SQL, Excel, AWS, communication.
+3. Action verbs: terms such as built, developed, managed, led, and improved.
+4. Education/training: degree, university, certification, diploma, and similar.
+5. Important sections: Skills, Experience, Education, Projects, Summary, etc.
+6. Contact details: email, phone number, LinkedIn, or GitHub.
+7. Measurable results: numbers and percentages, such as "Improved sales 20%."
+8. Bullet structure: bullets make a resume easier to scan.
+9. Readable lines: very long lines reduce readability.
+10. Vocabulary range: variety of words used in the resume.
+
+
+6. WHAT IS THE NEURAL NETWORK?
+-------------------------------
+A neural network is a mathematical program inspired by neurons in the brain.
+Here, it learns how to combine the 10 resume feature values into one quality
+score.
+
+Network structure:
+
+Resume text
+  -> 10 extracted feature values
+  -> hidden layer with 12 neurons
+  -> one output value
+  -> score from 1 to 10
+
+Connections between neurons have values called weights. A larger weight means
+that input has more effect on the next neuron. The network changes its weights
+while training so its predictions become closer to the example target scores.
+
+
+7. HOW THE NETWORK TRAINS
+-------------------------
+make_training_data() creates sample feature sets. The target is mainly based
+on a weighted resume-quality rule, plus examples of weak, average, and strong
+resumes. The network trains for 700 epochs (passes over the training samples).
+
+For every example it does this:
+1. Predicts a result from the feature values.
+2. Compares the prediction with the target score.
+3. Calculates the error.
+4. Adjusts weights and biases a little to reduce later error.
+
+This correction process is a basic form of backpropagation.
+
+Important: this is a lightweight educational model. It uses synthetic training
+data, not a large dataset of real recruiter decisions. The score is useful
+feedback, not a hiring decision or guarantee.
+
+
+8. WHAT IS A SIGMOID FUNCTION?
+------------------------------
+The sigmoid function is used inside every neuron in this network.
+
+Formula:
+sigmoid(x) = 1 / (1 + e^(-x))
+
+In simple language, it changes any input number into a smooth number between
+0 and 1.
+
+- A very negative input becomes close to 0.
+- An input of 0 becomes 0.5.
+- A very positive input becomes close to 1.
+
+Why it is used:
+1. It keeps each neuron output in a predictable 0-to-1 range.
+2. It adds non-linearity, so the network can learn more than simple addition.
+3. It is smooth, so weights can be adjusted while training.
+4. The final value is easy to map to a score.
+
+The code changes the final value to a 1-10 score using:
+score = round(network_output * 9 + 1)
+
+
+9. WHY EXTRACT FEATURES FIRST?
+------------------------------
+Computers need numbers to work with. Feature extraction converts resume text
+into numbers that a neural network can use. For example:
+
+- An email address increases the contact-details feature.
+- "Developed" or "led" increases the action-verbs feature.
+- "25%" increases the measurable-results feature.
+
+The neural network considers all values together to calculate one score.
+
+
+10. HOW THE IMPROVED RESUME DRAFT WORKS
+----------------------------------------
+The draft feature is template-based, not a text-generating AI system. It uses
+only the resume text uploaded by the candidate. It recognizes common headings,
+places details under useful sections, adds a summary prompt if needed, and adds
+editing reminders. Missing information is shown in square brackets.
+
+This is deliberate: the app must not invent work experience, skills, dates, or
+results that the candidate has not provided.
+
+
+11. PROJECT-MANAGER QUESTIONS AND ANSWERS
+------------------------------------------
+Q: What problem does the project solve?
+A: It gives job seekers fast, structured feedback about resume completeness,
+   clarity, and measurable content. Low-score resumes get a clearer draft.
+
+Q: Is this really AI?
+A: Yes. The final score is produced by a small custom neural network. It is a
+   lightweight educational model, so it should not replace recruiter judgment.
+
+Q: Why use a neural network instead of only if/else rules?
+A: Rules extract useful text features. The neural network then learns how to
+   combine those values into one score, keeping the scoring layer separate and
+   easier to improve later.
+
+Q: What does the score mean?
+A: It estimates how complete and readable a resume is according to this
+   project's checks. It does not predict whether someone will be hired.
+
+Q: What happens below a score of 6?
+A: The app displays a reorganized, ATS-friendly draft below the feedback. It
+   uses supplied text and prompts the user to complete missing information.
+
+Q: Does the draft invent information?
+A: No. It only reorganizes content from the uploaded resume and uses prompts
+   for missing details.
+
+Q: Where do I add a new scoring feature?
+A: Use resume_analyzer.py. Add it in extract_features(), add its label, and
+   ensure the network input size matches the total number of features.
+
+Q: Where do I change the resume-draft format?
+A: Use resume_improver.py. It is intentionally separate from app.py and the
+   scoring code so the project remains organized.
+
+Q: How are PDF and image files handled?
+A: pypdf reads PDFs. Pillow and pytesseract use OCR for images. OCR accuracy
+   depends on image quality and the Tesseract installation.
+
+Q: What are the limitations?
+A: Keyword checks can miss equivalent wording. Training data is synthetic, OCR
+   can make errors, and the app does not yet compare a resume to a job posting.
+
+Q: What are good next improvements?
+A: Add job-description matching, role-specific skills, a downloadable draft,
+   browser editing, saved history, automated tests, and real labelled training
+   data.
+
+Q: Is a resume stored permanently?
+A: No. The current app uses a temporary upload file only for text extraction,
+   then deletes it. There is no database in the project.
+
+
+12. 30-SECOND PROJECT DESCRIPTION
+----------------------------------
+
+"This is a Flask-based AI Resume Analyzer. It extracts text from uploaded
+resumes, measures ten qualities such as skills, action verbs, contacts, and
+measurable achievements, then uses a small neural network to create a score
+from 1 to 10. It gives feedback and a feature graph. For low scores, a separate
+module creates a clearer resume draft without inventing candidate information."
