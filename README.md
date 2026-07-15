@@ -8,7 +8,7 @@ A simple Python resume analyzer that scores a resume from 1 to 10 and gives quic
 - Extracts text from a `.pdf` file
 - Accepts image resumes with optional OCR support
 - Accepts pasted resume text from the terminal
-- Provides a web upload page with score, key points, missing areas, and a feature graph
+- Provides a web upload page with score, key points, missing areas, and a 20-point feature graph with hover explanations
 - Generates an ATS-friendly improved-resume draft below the analysis when the score is under 6
 - Checks role-relevant skills, sections, contact details, action verbs, measurable results, and readability
 - Uses a small neural network to generate a resume score

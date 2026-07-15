@@ -21,18 +21,29 @@ except ImportError:
     pytesseract = None
 
 
-FEATURE_LABELS = [
-    "Resume length",
-    "Role-relevant skills",
-    "Action verbs",
-    "Education / training",
-    "Important sections",
-    "Contact details",
-    "Measurable results",
-    "Bullet structure",
-    "Readable lines",
-    "Vocabulary range"
+FEATURE_DETAILS = [
+    ("Resume length", "Checks whether the resume has enough useful text without being excessively short."),
+    ("Role-relevant skills", "Looks for technical and professional skills used across common roles."),
+    ("Action verbs", "Counts strong verbs such as built, developed, led, and improved."),
+    ("Education / training", "Looks for degrees, courses, certifications, or other training."),
+    ("Important sections", "Checks for common sections such as Skills, Experience, Education, and Projects."),
+    ("Contact details", "Checks for an email, phone number, and professional profile link."),
+    ("Measurable results", "Looks for numbers or percentages that make achievements more specific."),
+    ("Bullet structure", "Checks for bullet points that make experience easier to scan."),
+    ("Readable lines", "Rewards resumes that avoid too many very long lines of text."),
+    ("Vocabulary range", "Measures the variety of words used across the resume."),
+    ("Target role clarity", "Looks for a clear job title or target role, such as engineer, analyst, or manager."),
+    ("Professional summary", "Checks for a summary, profile, or objective near the start of the resume."),
+    ("Project evidence", "Looks for a Projects section or project-related work to show practical experience."),
+    ("Experience evidence", "Looks for work, internship, volunteer, or other experience information."),
+    ("Portfolio links", "Checks for GitHub, LinkedIn, a portfolio, Kaggle, or another professional link."),
+    ("Certifications", "Looks for a Certifications section or certification-related content."),
+    ("Date clarity", "Looks for dates that help recruiters understand education and experience timelines."),
+    ("Skills organization", "Checks whether skills are grouped under a clear skills or technologies section."),
+    ("Achievement bullets", "Checks for bullets that combine an action with a specific outcome or result."),
+    ("Completion check", "Rewards resumes without visible placeholders such as [Add your email] or TODO."),
 ]
+FEATURE_LABELS = [label for label, _ in FEATURE_DETAILS]
 
 ROLE_SKILL_KEYWORDS = [
     "accounting", "administration", "admissions", "air conditioning", "analytics", "assembly",
@@ -54,7 +65,7 @@ ROLE_SKILL_KEYWORDS = [
 ]
 
 MODEL_PATH = Path(__file__).with_name("resume_model.json")
-MODEL_FORMAT_VERSION = 1
+MODEL_FORMAT_VERSION = 2
 _trained_model = None
 
 
@@ -161,6 +172,7 @@ def normalized(value, limit):
 def extract_features(resume):
     text = resume.lower()
     words = re.findall(r"[a-zA-Z0-9+#.]+", text)
+    lines = [line.strip() for line in resume.splitlines() if line.strip()]
     action_keywords = [
         "built", "created", "developed", "designed", "implemented", "improved", "optimized",
         "automated", "managed", "led", "launched", "deployed", "analyzed", "trained", "reduced",
@@ -181,7 +193,28 @@ def extract_features(resume):
     contact_score = int(bool(re.search(r"[\w.+-]+@[\w-]+\.[\w.-]+", text))) + int(bool(re.search(r"\b\d{10}\b|\(\d{3}\)\s*\d{3}[- ]?\d{4}", text))) + int("linkedin" in text or "github" in text)
     number_score = len(re.findall(r"\b\d+%?\b", text))
     bullet_score = resume.count("\n-") + resume.count("\n*") + resume.count(chr(8226))
-    long_line_penalty = sum(1 for line in resume.splitlines() if len(line) > 140)
+    long_line_penalty = sum(1 for line in lines if len(line) > 140)
+    target_role_keywords = [
+        "engineer", "developer", "analyst", "designer", "manager", "specialist", "consultant",
+        "coordinator", "scientist", "intern", "technician", "teacher", "accountant", "nurse"
+    ]
+    date_matches = re.findall(
+        r"\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{4}\b|\b(?:19|20)\d{2}\b",
+        text,
+    )
+    portfolio_score = int("linkedin" in text) + int("github" in text) + int(bool(re.search(r"\b(?:portfolio|kaggle|gitlab|behance)\b", text)))
+    skills_organization = (
+        int(bool(re.search(r"\b(?:technical )?skills\b|\btechnologies\b", text)))
+        + int(bool(re.search(r"\b(?:technical )?skills\b[^\n]{0,60}[:|]", text)))
+        + int(count_keywords(text, ROLE_SKILL_KEYWORDS) >= 5)
+    )
+    achievement_bullets = sum(
+        1
+        for line in lines
+        if re.match(r"^(?:[-*•]\s*)?(?:" + "|".join(action_keywords) + r")\b", line.lower())
+        and re.search(r"\b\d+%?\b|(?:increased|reduced|improved|saved|grew)", line.lower())
+    )
+    placeholder_count = len(re.findall(r"\[[^\]]*(?:add|insert|your)[^\]]*\]|\b(?:todo|tbd)\b", text))
     features = [
         normalized(len(words), 650),
         normalized(count_keywords(text, ROLE_SKILL_KEYWORDS), 12),
@@ -192,13 +225,26 @@ def extract_features(resume):
         normalized(number_score, 8),
         normalized(bullet_score, 12),
         1 - normalized(long_line_penalty, 6),
-        normalized(len(set(words)), 350)
+        normalized(len(set(words)), 350),
+        normalized(count_keywords(text, target_role_keywords), 2),
+        float(bool(re.search(r"\b(?:summary|profile|objective)\b", text))),
+        float(bool(re.search(r"\bprojects?\b|\bportfolio\b", text))),
+        float(bool(re.search(r"\b(?:experience|employment|work history|internship|volunteer)\b", text))),
+        normalized(portfolio_score, 2),
+        float(bool(re.search(r"\b(?:certifications?|certified|certificate)\b", text))),
+        normalized(len(date_matches), 3),
+        normalized(skills_organization, 3),
+        normalized(achievement_bullets, 3),
+        1 - normalized(placeholder_count, 1),
     ]
     return features
 
 
 def rule_score(features):
-    weights = [1.0, 1.7, 1.3, 0.8, 1.2, 1.0, 1.1, 0.8, 0.6, 0.7]
+    weights = [
+        1.0, 1.7, 1.3, 0.8, 1.2, 1.0, 1.1, 0.8, 0.6, 0.7,
+        0.9, 1.1, 1.0, 1.2, 0.7, 0.6, 0.7, 0.8, 1.2, 0.8,
+    ]
     value = sum(feature * weight for feature, weight in zip(features, weights)) / sum(weights)
     return max(0.0, min(1.0, value))
 
@@ -207,14 +253,14 @@ def make_training_data():
     data = []
     random.seed(21)
     for _ in range(90):
-        features = [random.random() for _ in range(10)]
+        features = [random.random() for _ in FEATURE_LABELS]
         target = rule_score(features)
         data.append((features, target))
     examples = [
-        ([0.05, 0.02, 0.01, 0.0, 0.05, 0.0, 0.0, 0.0, 0.7, 0.05], 0.05),
-        ([0.25, 0.2, 0.15, 0.2, 0.3, 0.4, 0.1, 0.2, 0.8, 0.25], 0.32),
-        ([0.55, 0.55, 0.5, 0.45, 0.65, 0.7, 0.45, 0.5, 0.9, 0.55], 0.62),
-        ([0.85, 0.9, 0.85, 0.7, 0.85, 1.0, 0.9, 0.8, 0.95, 0.85], 0.92)
+        ([0.05, 0.02, 0.01, 0.0, 0.05, 0.0, 0.0, 0.0, 0.7, 0.05] + [0.0] * 9 + [0.3], 0.05),
+        ([0.25, 0.2, 0.15, 0.2, 0.3, 0.4, 0.1, 0.2, 0.8, 0.25] + [0.2] * 9 + [0.7], 0.32),
+        ([0.55, 0.55, 0.5, 0.45, 0.65, 0.7, 0.45, 0.5, 0.9, 0.55] + [0.55] * 9 + [1.0], 0.62),
+        ([0.85, 0.9, 0.85, 0.7, 0.85, 1.0, 0.9, 0.8, 0.95, 0.85] + [0.85] * 9 + [1.0], 0.92)
     ]
     data.extend(examples)
     return data
@@ -257,8 +303,8 @@ def analyze_resume(resume):
     score, features = score_resume(resume)
     strengths, improvements = feedback(features)
     feature_scores = [
-        {"label": label, "value": round(value * 100)}
-        for label, value in zip(FEATURE_LABELS, features)
+        {"label": label, "description": description, "value": round(value * 100)}
+        for (label, description), value in zip(FEATURE_DETAILS, features)
     ]
     return {
         "score": score,

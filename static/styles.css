@@ -293,6 +293,39 @@ ul {
     font-size: 0.92rem;
 }
 
+.feature-label {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+    border-bottom: 1px dashed #000000;
+    cursor: help;
+}
+
+.feature-tooltip {
+    position: absolute;
+    z-index: 5;
+    bottom: calc(100% + 9px);
+    left: 0;
+    width: min(250px, 72vw);
+    padding: 10px 12px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    border: 1px solid #000000;
+    background: #000000;
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.feature-label:hover .feature-tooltip,
+.feature-label:focus .feature-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .bar-track {
     height: 12px;
     overflow: hidden;
@@ -519,7 +552,7 @@ ul {
         grid-template-columns: 1fr 44px;
     }
 
-    .bar-row span {
+    .bar-row > .feature-label {
         grid-column: 1 / -1;
     }
 }
