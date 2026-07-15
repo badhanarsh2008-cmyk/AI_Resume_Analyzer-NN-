@@ -293,7 +293,6 @@ ul {
     font-size: 0.92rem;
 }
 
-<<<<<<< HEAD
 .feature-label {
     position: relative;
     width: fit-content;
@@ -327,8 +326,6 @@ ul {
     transform: translateY(0);
 }
 
-=======
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 .bar-track {
     height: 12px;
     overflow: hidden;
@@ -555,11 +552,7 @@ ul {
         grid-template-columns: 1fr 44px;
     }
 
-<<<<<<< HEAD
     .bar-row > .feature-label {
-=======
-    .bar-row span {
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
         grid-column: 1 / -1;
     }
 }

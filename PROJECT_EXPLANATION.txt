@@ -15,11 +15,7 @@ The program supports TXT, PDF, and image resumes. Image reading needs OCR.
 1. The user uploads a resume in the browser.
 2. app.py checks the file type and saves it temporarily.
 3. resume_analyzer.py extracts the text from the file.
-<<<<<<< HEAD
 4. The analyzer turns the text into 20 numeric features.
-=======
-4. The analyzer turns the text into 10 numeric features.
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 5. A small neural network combines the feature values and returns a score.
 6. The web page displays the score, feedback, and graph.
 7. When the score is lower than 6, resume_improver.py creates a safe,
@@ -67,11 +63,7 @@ pathlib and tempfile: safely work with temporary files and paths.
 For image OCR, the Tesseract application must also be installed on the system.
 
 
-<<<<<<< HEAD
 5. THE 20 CHECKED RESUME FEATURES
-=======
-5. THE 10 CHECKED RESUME FEATURES
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 ----------------------------------
 Each check becomes a number between 0 and 1. Higher is better.
 
@@ -85,7 +77,6 @@ Each check becomes a number between 0 and 1. Higher is better.
 8. Bullet structure: bullets make a resume easier to scan.
 9. Readable lines: very long lines reduce readability.
 10. Vocabulary range: variety of words used in the resume.
-<<<<<<< HEAD
 11. Target role clarity: checks for a clear role such as engineer or analyst.
 12. Professional summary: checks for a Summary, Profile, or Objective section.
 13. Project evidence: checks for projects or portfolio work.
@@ -99,28 +90,18 @@ Each check becomes a number between 0 and 1. Higher is better.
 
 Every graph label has a hover and keyboard-focus explanation describing exactly
 what that feature checks.
-=======
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 
 
 6. WHAT IS THE NEURAL NETWORK?
 -------------------------------
 A neural network is a mathematical program inspired by neurons in the brain.
-<<<<<<< HEAD
 Here, it learns how to combine the 20 resume feature values into one quality
-=======
-Here, it learns how to combine the 10 resume feature values into one quality
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 score.
 
 Network structure:
 
 Resume text
-<<<<<<< HEAD
   -> 20 extracted feature values
-=======
-  -> 10 extracted feature values
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
   -> hidden layer with 12 neurons
   -> one output value
   -> score from 1 to 10
@@ -253,11 +234,7 @@ A: No. The current app uses a temporary upload file only for text extraction,
 ----------------------------------
 
 "This is a Flask-based AI Resume Analyzer. It extracts text from uploaded
-<<<<<<< HEAD
 resumes, measures twenty qualities such as skills, action verbs, contacts, and
-=======
-resumes, measures ten qualities such as skills, action verbs, contacts, and
->>>>>>> 55e9bcd21875a652499e5513d581cca63b564100
 measurable achievements, then uses a small neural network to create a score
 from 1 to 10. It gives feedback and a feature graph. For low scores, a separate
 module creates a clearer resume draft without inventing candidate information."
