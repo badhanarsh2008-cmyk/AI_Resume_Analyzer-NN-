@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Resume Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="shell">
+        <section class="upload-panel">
+            <div>
+                <p class="eyebrow">AI resume review</p>
+                <h1>Upload your resume and get a clear score.</h1>
+                <p class="lede">See strengths, missing pieces, and a feature graph based on skills, sections, contact details, measurable impact, and readability.</p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="upload-form">
+                <label class="file-picker">
+                    <span>Choose resume</span>
+                    <input type="file" name="resume" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tiff" required>
+                </label>
+                <button type="submit">Analyze</button>
+            </form>
+            <a class="secondary-link" href="{{ url_for('compare') }}">Compare two resumes</a>
+
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+        </section>
+
+        <section class="results-panel">
+            {% if result %}
+                <div class="score-row">
+                    <div class="score-ring" style="--score: {{ result.score * 10 }}%">
+                        <span>{{ result.score }}</span>
+                        <small>/10</small>
+                    </div>
+                    <div>
+                        <p class="eyebrow">{{ result.filename }}</p>
+                        <h2>Resume score</h2>
+                        <p>{{ result.word_count }} words analyzed</p>
+                        <div class="score-badge score-badge--{{ result.badge.tone }}" role="status">
+                            <span class="badge-icon" aria-hidden="true">{{ result.badge.icon }}</span>
+                            <span>
+                                <strong>{{ result.badge.label }}</strong>
+                                <small>{{ result.badge.message }}</small>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-grid">
+                    <article>
+                        <h3>Strong Areas</h3>
+                        <ul>
+                            {% for item in result.strengths %}
+                                <li>{{ item }}</li>
+                            {% else %}
+                                <li>No strong areas detected yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </article>
+                    <article>
+                        <h3>Missing / Improve</h3>
+                        <ul>
+                            {% for item in result.improvements %}
+                                <li>{{ item }}</li>
+                            {% else %}
+                                <li>Looks balanced across the checked areas.</li>
+                            {% endfor %}
+                        </ul>
+                    </article>
+                </div>
+
+                <div class="chart">
+                    <h3>Feature Graph</h3>
+                    {% for feature in result.features %}
+                        <div class="bar-row">
+                            <span>{{ feature.label }}</span>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="width: {{ feature.value }}%"></div>
+                            </div>
+                            <strong>{{ feature.value }}%</strong>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if result.improved_resume %}
+                    <section class="improved-resume">
+                        <h3>Improved Resume Draft</h3>
+                        <p>Your score is below 6, so here is a clearer, ATS-friendly draft based only on the text you uploaded. Complete the bracketed prompts and verify every claim before using it.</p>
+                        <pre>{{ result.improved_resume }}</pre>
+                    </section>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <h2>Your analysis will appear here.</h2>
+                    <p>Upload a PDF, text file, or resume image to generate the score and graph.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>
